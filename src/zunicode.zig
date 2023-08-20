@@ -63,11 +63,11 @@ pub fn is32(ranges: []tables.Range32, r: u32) bool {
 }
 
 pub fn is(range_tab: *const tables.RangeTable, r: i32) bool {
-    if (range_tab.r16.len > 0 and r <= @intCast(i32, range_tab.r16[range_tab.r16.len - 1].hi)) {
-        return is16(range_tab.r16, @intCast(u16, r));
+    if (range_tab.r16.len > 0 and r <= @as(i32, @intCast(range_tab.r16[range_tab.r16.len - 1].hi))) {
+        return is16(range_tab.r16, @as(u16, @intCast(r)));
     }
-    if (range_tab.r32.len > 0 and r > @intCast(i32, range_tab.r32[0].lo)) {
-        return is32(range_tab.r32, @intCast(u32, r));
+    if (range_tab.r32.len > 0 and r > @as(i32, @intCast(range_tab.r32[0].lo))) {
+        return is32(range_tab.r32, @as(u32, @intCast(r)));
     }
     return false;
 }
@@ -75,11 +75,11 @@ pub fn is(range_tab: *const tables.RangeTable, r: i32) bool {
 pub fn isExcludingLatin(range_tab: *const tables.RangeTable, r: i32) bool {
     const off = range_tab.latin_offset;
     const r16_len = range_tab.r16.len;
-    if (r16_len > off and r <= @intCast(i32, range_tab.r16[r16_len - 1].hi)) {
-        return is16(range_tab.r16[off..], @intCast(u16, r));
+    if (r16_len > off and r <= @as(i32, @intCast(range_tab.r16[r16_len - 1].hi))) {
+        return is16(range_tab.r16[off..], @as(u16, @intCast(r)));
     }
-    if (range_tab.r32.len > 0 and r >= @intCast(i32, range_tab.r32[0].lo)) {
-        return is32(range_tab.r32, @intCast(u32, r));
+    if (range_tab.r32.len > 0 and r >= @as(i32, @intCast(range_tab.r32[0].lo))) {
+        return is32(range_tab.r32, @as(u32, @intCast(r)));
     }
     return false;
 }
@@ -87,7 +87,7 @@ pub fn isExcludingLatin(range_tab: *const tables.RangeTable, r: i32) bool {
 /// isUpper reports whether the rune is an upper case
 pub fn isUpper(rune: i32) bool {
     if (rune <= tables.max_latin1) {
-        const p = tables.properties[@intCast(usize, rune)];
+        const p = tables.properties[@as(usize, @intCast(rune))];
         return (p & tables.pLmask) == tables.pLu;
     }
     return isExcludingLatin(tables.Upper, rune);
@@ -96,7 +96,7 @@ pub fn isUpper(rune: i32) bool {
 // isLower reports whether the rune is a lower case
 pub fn isLower(rune: i32) bool {
     if (rune <= tables.max_latin1) {
-        const p = tables.properties[@intCast(usize, rune)];
+        const p = tables.properties[@as(usize, @intCast(rune))];
         return (p & tables.pLmask) == tables.pLl;
     }
     return isExcludingLatin(tables.Lower, rune);
@@ -127,9 +127,9 @@ fn to_case(_case: tables.Case, rune: i32, case_range: []tables.CaseRange) toResu
     while (lo < hi) {
         const m = lo + (hi - lo) / 2;
         const cr = case_range[m];
-        if (@intCast(i32, cr.lo) <= rune and rune <= @intCast(i32, cr.hi)) {
-            const delta = cr.delta[@intCast(usize, _case.rune())];
-            if (delta > @intCast(i32, tables.max_rune)) {
+        if (@as(i32, @intCast(cr.lo)) <= rune and rune <= @as(i32, @intCast(cr.hi))) {
+            const delta = cr.delta[@as(usize, @intCast(_case.rune()))];
+            if (delta > @as(i32, @intCast(tables.max_rune))) {
                 // In an Upper-Lower sequence, which always starts with
                 // an UpperCase letter, the real deltas always look like:
                 //{0, 1, 0}    UpperCase (Lower is next)
@@ -142,16 +142,16 @@ fn to_case(_case: tables.Case, rune: i32, case_range: []tables.CaseRange) toResu
                 // is odd so we take the low bit from _case.
                 var i: i32 = 1;
                 return toResult{
-                    .mapped = @intCast(i32, cr.lo) + ((rune - @intCast(i32, cr.lo)) & ~i | (_case.rune() & 1)),
+                    .mapped = @as(i32, @intCast(cr.lo)) + ((rune - @as(i32, @intCast(cr.lo))) & ~i | (_case.rune() & 1)),
                     .found_mapping = true,
                 };
             }
             return toResult{
-                .mapped = @intCast(i32, @intCast(i32, rune) + delta),
+                .mapped = @as(i32, @intCast(@as(i32, @intCast(rune)) + delta)),
                 .found_mapping = true,
             };
         }
-        if (rune < @intCast(i32, cr.lo)) {
+        if (rune < @as(i32, @intCast(cr.lo))) {
             hi = m;
         } else {
             lo = m + 1;
@@ -221,22 +221,22 @@ pub fn simpleFold(r: u32) u32 {
     if (r < 0 or r > tables.max_rune) {
         return r;
     }
-    const idx = @intCast(usize, r);
+    const idx = @as(usize, @intCast(r));
     if (idx < tables.asciiFold.len) {
-        return @intCast(u32, tables.asciiFold[idx]);
+        return @as(u32, @intCast(tables.asciiFold[idx]));
     }
     var lo: usize = 0;
     var hi = tables.caseOrbit.len;
     while (lo < hi) {
         const m = lo + (hi - lo) / 2;
-        if (@intCast(u32, tables.caseOrbit[m].from) < r) {
+        if (@as(u32, @intCast(tables.caseOrbit[m].from)) < r) {
             lo = m + 1;
         } else {
             hi = m;
         }
     }
-    if (lo < tables.caseOrbit.len and @intCast(u32, tables.caseOrbit[lo].from) == r) {
-        return @intCast(u32, tables.caseOrbit[lo].to);
+    if (lo < tables.caseOrbit.len and @as(u32, @intCast(tables.caseOrbit[lo].from)) == r) {
+        return @as(u32, @intCast(tables.caseOrbit[lo].to));
     }
     // No folding specified. This is a one- or two-element
     // equivalence class containing rune and ToLower(rune)
@@ -270,7 +270,7 @@ pub fn in(r: i32, ranges: []const *const tables.RangeTable) bool {
 // spaces, from categories L, M, N, P, S, Zs.
 pub fn isGraphic(r: i32) bool {
     if (r <= tables.max_latin1) {
-        return tables.properties[@intCast(usize, r)] & tables.pg != 0;
+        return tables.properties[@as(usize, @intCast(r))] & tables.pg != 0;
     }
     return in(r, graphic_ranges[0..]);
 }
@@ -282,7 +282,7 @@ pub fn isGraphic(r: i32) bool {
 // only spacing character is ASCII space, U+0020
 pub fn isPrint(r: i32) bool {
     if (r <= tables.max_latin1) {
-        return tables.properties[@intCast(usize, r)] & tables.pp != 0;
+        return tables.properties[@as(usize, @intCast(r))] & tables.pp != 0;
     }
     return in(r, print_ranges[0..]);
 }
@@ -296,7 +296,7 @@ pub fn isOneOf(ranges: []*tables.RangeTable, r: u32) bool {
 // such as surrogates; use Is(C, r) to test for them.
 pub fn isControl(r: i32) bool {
     if (r <= tables.max_latin1) {
-        return tables.properties[@intCast(usize, r)] & tables.pC != 0;
+        return tables.properties[@as(usize, @intCast(r))] & tables.pC != 0;
     }
     return false;
 }
@@ -304,7 +304,7 @@ pub fn isControl(r: i32) bool {
 // IsLetter reports whether the rune is a letter (category L).
 pub fn isLetter(r: i32) bool {
     if (r <= tables.max_latin1) {
-        return tables.properties[@intCast(usize, r)] & tables.pLmask != 0;
+        return tables.properties[@as(usize, @intCast(r))] & tables.pLmask != 0;
     }
     return isExcludingLatin(tables.Letter, r);
 }
@@ -318,7 +318,7 @@ pub fn isMark(r: i32) bool {
 // IsNumber reports whether the rune is a number (category N).
 pub fn isNumber(r: i32) bool {
     if (r <= tables.max_latin1) {
-        return tables.properties[@intCast(usize, r)] & tables.pN != 0;
+        return tables.properties[@as(usize, @intCast(r))] & tables.pN != 0;
     }
     return isExcludingLatin(tables.Number, r);
 }
@@ -327,7 +327,7 @@ pub fn isNumber(r: i32) bool {
 // (category P).
 pub fn isPunct(r: i32) bool {
     if (r <= tables.max_latin1) {
-        return tables.properties[@intCast(usize, r)] & tables.pP != 0;
+        return tables.properties[@as(usize, @intCast(r))] & tables.pP != 0;
     }
     return is(tables.Punct, r);
 }
@@ -351,7 +351,7 @@ pub fn isSpace(r: i32) bool {
 // IsSymbol reports whether the rune is a symbolic character.
 pub fn isSymbol(r: i32) bool {
     if (r <= tables.max_latin1) {
-        return tables.properties[@intCast(usize, r)] & tables.pS != 0;
+        return tables.properties[@as(usize, @intCast(r))] & tables.pS != 0;
     }
     return isExcludingLatin(tables.Symbol, r);
 }

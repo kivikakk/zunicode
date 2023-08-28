@@ -26,7 +26,7 @@ pub const pLmask: u8 = 96;
 /// If the Delta field of a CaseRange is UpperLower, it means
 /// this CaseRange represents a sequence of the form (say)
 /// Upper Lower Upper Lower.
-pub const upper_lower: i32 = @intCast(i32, max_rune) + 1;
+pub const upper_lower: i32 = @as(i32, @intCast(max_rune)) + 1;
 
 pub const RangeTable = struct {
     r16: []Range16,
@@ -61,7 +61,7 @@ pub const Case = enum(usize) {
     Max,
 
     pub fn rune(self: Case) i32 {
-        return @intCast(i32, @enumToInt(self));
+        return @as(i32, @intCast(@intFromEnum(self)));
     }
 };
 

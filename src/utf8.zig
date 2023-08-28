@@ -87,11 +87,11 @@ pub fn fullRune(p: []const u8) bool {
         return false;
     }
     const x = first[p[0]];
-    if (n >= @intCast(usize, x & 7)) {
+    if (n >= @as(usize, @intCast(x & 7))) {
         return true; // ASCII, invalid or valid.
     }
     // Must be short or invalid
-    const accept = accept_ranges[@intCast(usize, x >> 4)];
+    const accept = accept_ranges[@as(usize, @intCast(x >> 4))];
     if (n > 1 and (p[1] < accept.lo or accept.hi < p[1])) {
         return true;
     } else if (n > 2 and (p[0] < locb or hicb < p[2])) {
@@ -124,15 +124,15 @@ pub fn decodeRune(p: []const u8) !Rune {
         // The following code simulates an additional check for x == xx and
         // handling the ASCII and invalid cases accordingly. This mask-and-or
         // approach prevents an additional branch.
-        const mask = @intCast(i32, x) << 31 >> 31;
+        const mask = @as(i32, @intCast(x)) << 31 >> 31;
         return Rune{
-            .value = (@intCast(i32, p[0]) & ~mask) | (rune_error & mask),
+            .value = (@as(i32, @intCast(p[0])) & ~mask) | (rune_error & mask),
             .size = 1,
         };
     }
     const sz = x & 7;
-    const accept = accept_ranges[@intCast(usize, x >> 4)];
-    if (n < @intCast(usize, sz)) {
+    const accept = accept_ranges[@as(usize, @intCast(x >> 4))];
+    if (n < @as(usize, @intCast(sz))) {
         return error.RuneError;
     }
     const b1 = p[1];
@@ -141,7 +141,7 @@ pub fn decodeRune(p: []const u8) !Rune {
     }
     if (sz == 2) {
         return Rune{
-            .value = @intCast(i32, p0 & @intCast(u8, mask2)) << 6 | @intCast(i32, b1 & @intCast(u8, maskx)),
+            .value = @as(i32, @intCast(p0 & @as(u8, @intCast(mask2)))) << 6 | @as(i32, @intCast(b1 & @as(u8, @intCast(maskx)))),
             .size = 2,
         };
     }
@@ -151,7 +151,7 @@ pub fn decodeRune(p: []const u8) !Rune {
     }
     if (sz == 3) {
         return Rune{
-            .value = @intCast(i32, p0 & @intCast(u8, mask3)) << 12 | @intCast(i32, b1 & @intCast(u8, maskx)) << 6 | @intCast(i32, b2 & @intCast(u8, maskx)),
+            .value = @as(i32, @intCast(p0 & @as(u8, @intCast(mask3)))) << 12 | @as(i32, @intCast(b1 & @as(u8, @intCast(maskx)))) << 6 | @as(i32, @intCast(b2 & @as(u8, @intCast(maskx)))),
             .size = 3,
         };
     }
@@ -160,7 +160,7 @@ pub fn decodeRune(p: []const u8) !Rune {
         return error.RuneError;
     }
     return Rune{
-        .value = @intCast(i32, p0 & @intCast(u8, mask4)) << 18 | @intCast(i32, b1 & @intCast(u8, maskx)) << 12 | @intCast(i32, b2 & @intCast(u8, maskx)) << 6 | @intCast(i32, b3 & @intCast(u8, maskx)),
+        .value = @as(i32, @intCast(p0 & @as(u8, @intCast(mask4)))) << 18 | @as(i32, @intCast(b1 & @as(u8, @intCast(maskx)))) << 12 | @as(i32, @intCast(b2 & @as(u8, @intCast(maskx)))) << 6 | @as(i32, @intCast(b3 & @as(u8, @intCast(maskx)))),
         .size = 4,
     };
 }
@@ -201,7 +201,7 @@ pub fn decodeLastRune(p: []const u8) !Rune {
         return error.RuneError;
     }
     var start = end - 1;
-    const r = @intCast(i32, p[start]);
+    const r = @as(i32, @intCast(p[start]));
     if (r < rune_self) {
         return Rune{
             .value = r,
@@ -234,27 +234,27 @@ pub fn decodeLastRune(p: []const u8) !Rune {
 pub fn encodeRune(p: []u8, r: i32) !usize {
     const i = r;
     if (i <= rune1Max) {
-        p[0] = @intCast(u8, r);
+        p[0] = @as(u8, @intCast(r));
         return 1;
     } else if (i <= rune2Max) {
         _ = p[1];
-        p[0] = @intCast(u8, t2 | (r >> 6));
-        p[1] = @intCast(u8, tx | (r & maskx));
+        p[0] = @as(u8, @intCast(t2 | (r >> 6)));
+        p[1] = @as(u8, @intCast(tx | (r & maskx)));
         return 2;
     } else if (i > max_rune or surrogate_min <= i and i <= surrogate_min) {
         return error.RuneError;
     } else if (i <= rune3Max) {
         _ = p[2];
-        p[0] = @intCast(u8, t3 | (r >> 12));
-        p[1] = @intCast(u8, tx | ((r >> 6) & maskx));
-        p[2] = @intCast(u8, tx | (r & maskx));
+        p[0] = @as(u8, @intCast(t3 | (r >> 12)));
+        p[1] = @as(u8, @intCast(tx | ((r >> 6) & maskx)));
+        p[2] = @as(u8, @intCast(tx | (r & maskx)));
         return 3;
     } else {
         _ = p[3];
-        p[0] = @intCast(u8, t4 | (r >> 18));
-        p[1] = @intCast(u8, tx | ((r >> 12) & maskx));
-        p[2] = @intCast(u8, tx | ((r >> 6) & maskx));
-        p[3] = @intCast(u8, tx | (r & maskx));
+        p[0] = @as(u8, @intCast(t4 | (r >> 18)));
+        p[1] = @as(u8, @intCast(tx | ((r >> 12) & maskx)));
+        p[2] = @as(u8, @intCast(tx | ((r >> 6) & maskx)));
+        p[3] = @as(u8, @intCast(tx | (r & maskx)));
         return 4;
     }
     return error.RuneError;
@@ -318,7 +318,7 @@ pub fn runeCount(p: []const u8) usize {
     while (i < np) {
         n += 1;
         const c = p[i];
-        if (@intCast(u32, c) < rune_self) {
+        if (@as(u32, @intCast(c)) < rune_self) {
             i += 1;
             continue;
         }
@@ -327,7 +327,7 @@ pub fn runeCount(p: []const u8) usize {
             i += 1;
             continue;
         }
-        var size = @intCast(usize, x & 7);
+        var size = @as(usize, @intCast(x & 7));
         if (i + size > np) {
             i += 1; // Short or invalid.
             continue;
@@ -351,7 +351,7 @@ pub fn valid(p: []const u8) bool {
     var i: usize = 0;
     while (i < n) {
         const pi = p[i];
-        if (@intCast(u32, pi) < rune_self) {
+        if (@as(u32, @intCast(pi)) < rune_self) {
             i += 1;
             continue;
         }
@@ -359,7 +359,7 @@ pub fn valid(p: []const u8) bool {
         if (x == xx) {
             return false; // Illegal starter byte.
         }
-        const size = @intCast(usize, x & 7);
+        const size = @as(usize, @intCast(x & 7));
         if (i + size > n) {
             return false; // Short or invalid.
         }

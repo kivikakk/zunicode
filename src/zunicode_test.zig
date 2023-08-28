@@ -210,7 +210,7 @@ test "toLower" {
     }
 }
 
-test "toLower" {
+test "toTitle" {
     for (case_test) |c| {
         switch (c.case) {
             tables.Case.Title => {

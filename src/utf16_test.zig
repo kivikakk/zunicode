@@ -46,7 +46,7 @@ test "encodeRune" {
                 j += 1;
             } else {
                 try testing.expect(!(j >= tt.out.len));
-                try testing.expect(!(pair.r1 != @intCast(i32, tt.out[j]) or pair.r2 != @intCast(i32, tt.out[j + 1])));
+                try testing.expect(!(pair.r1 != @as(i32, @intCast(tt.out[j])) or pair.r2 != @as(i32, @intCast(tt.out[j + 1]))));
                 j += 2;
                 const dec = utf16.decodeRune(pair.r1, pair.r2);
                 try testing.expectEqual(r, dec);

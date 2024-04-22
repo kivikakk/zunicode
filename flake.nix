@@ -1,9 +1,17 @@
 {
+  inputs = {
+    zig = {
+      url = github:mitchellh/zig-overlay;
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
+  };
+
   outputs = {
     self,
     nixpkgs,
     flake-utils,
-    ...
+    zig,
   }:
     flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
@@ -14,7 +22,7 @@
 
         src = ./.;
 
-        nativeBuildInputs = [pkgs.zig];
+        nativeBuildInputs = [zig.packages.${system}."0.12.0"];
 
         buildPhase = ''
           export ZIG_GLOBAL_CACHE_DIR="$TMPDIR/zig"

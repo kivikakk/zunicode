@@ -283,7 +283,7 @@ test "isPrintLatin1" {
     var i: i32 = 0;
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isPrint(i);
-        var want = unicode.in(i, unicode.print_ranges[0..]);
+        var want = unicode.in(i, &.{ tables.L, tables.M, tables.N, tables.P, tables.S });
         if (i == ' ') {
             want = true;
         }
@@ -295,7 +295,7 @@ test "isGraphicLatin1" {
     var i: i32 = 0;
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isGraphic(i);
-        var want = unicode.in(i, unicode.graphic_ranges[0..]);
+        const want = unicode.in(i, &.{ tables.L, tables.M, tables.N, tables.P, tables.S, tables.Zs });
         try testing.expectEqual(want, got);
     }
 }

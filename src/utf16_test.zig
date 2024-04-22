@@ -27,7 +27,7 @@ const encode_tests = [_]encodeTest{
 };
 
 test "encode" {
-    var a = std.testing.allocator;
+    const a = std.testing.allocator;
     for (encode_tests) |ts| {
         const value = try utf16.encode(a, ts.in);
         try testing.expectEqualSlices(u16, ts.out, value.items);

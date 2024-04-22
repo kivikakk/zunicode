@@ -224,7 +224,7 @@ pub fn decodeLastRune(p: []const u8) !Rune {
     if (start < 0) {
         start = 0;
     }
-    var rune = try decodeRune(p[start..end]);
+    const rune = try decodeRune(p[start..end]);
     if (start + rune.size != end) {
         return error.RuneError;
     }

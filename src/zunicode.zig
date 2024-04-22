@@ -33,7 +33,7 @@ pub fn is16(ranges: []const tables.Range16, r: u16) bool {
     return false;
 }
 
-pub fn is32(ranges: []tables.Range32, r: u32) bool {
+pub fn is32(ranges: []const tables.Range32, r: u32) bool {
     if (ranges.len <= tables.linear_max) {
         for (ranges) |*range| {
             if (r < range.lo) {
@@ -62,24 +62,24 @@ pub fn is32(ranges: []tables.Range32, r: u32) bool {
     return false;
 }
 
-pub fn is(range_tab: *const tables.RangeTable, r: i32) bool {
+pub fn is(range_tab: anytype, r: i32) bool {
     if (range_tab.r16.len > 0 and r <= @as(i32, @intCast(range_tab.r16[range_tab.r16.len - 1].hi))) {
-        return is16(range_tab.r16, @intCast(r));
+        return is16(&range_tab.r16, @intCast(r));
     }
     if (range_tab.r32.len > 0 and r > @as(i32, @intCast(range_tab.r32[0].lo))) {
-        return is32(range_tab.r32, @intCast(r));
+        return is32(&range_tab.r32, @intCast(r));
     }
     return false;
 }
 
-pub fn isExcludingLatin(range_tab: *const tables.RangeTable, r: i32) bool {
+pub fn isExcludingLatin(range_tab: anytype, r: i32) bool {
     const off = range_tab.latin_offset;
     const r16_len = range_tab.r16.len;
     if (r16_len > off and r <= @as(i32, @intCast(range_tab.r16[r16_len - 1].hi))) {
         return is16(range_tab.r16[off..], @intCast(r));
     }
     if (range_tab.r32.len > 0 and r >= @as(i32, @intCast(range_tab.r32[0].lo))) {
-        return is32(range_tab.r32, @intCast(r));
+        return is32(&range_tab.r32, @intCast(r));
     }
     return false;
 }
@@ -115,7 +115,7 @@ const toResult = struct {
     found_mapping: bool,
 };
 
-fn to_case(_case: tables.Case, rune: i32, case_range: []tables.CaseRange) toResult {
+fn to_case(_case: tables.Case, rune: i32, case_range: []const tables.CaseRange) toResult {
     if (_case.rune() < 0 or tables.Case.Max.rune() <= _case.rune()) {
         return toResult{
             .mapped = tables.replacement_char,
@@ -140,7 +140,7 @@ fn to_case(_case: tables.Case, rune: i32, case_range: []tables.CaseRange) toResu
                 // bit in the sequence offset.
                 // The constants UpperCase and TitleCase are even while LowerCase
                 // is odd so we take the low bit from _case.
-                var i: i32 = 1;
+                const i: i32 = 1;
                 return toResult{
                     .mapped = @as(i32, @intCast(cr.lo)) + ((rune - @as(i32, @intCast(cr.lo))) & ~i | (_case.rune() & 1)),
                     .found_mapping = true,
@@ -165,7 +165,7 @@ fn to_case(_case: tables.Case, rune: i32, case_range: []tables.CaseRange) toResu
 
 // to maps the rune to the specified case: UpperCase, LowerCase, or TitleCase.
 pub fn to(case: tables.Case, rune: i32) i32 {
-    const v = to_case(case, rune, tables.CaseRanges);
+    const v = to_case(case, rune, &tables.CaseRanges);
     return v.mapped;
 }
 
@@ -248,16 +248,8 @@ pub fn simpleFold(r: u32) u32 {
     return toUpper(r);
 }
 
-pub const graphic_ranges = [_]*const tables.RangeTable{
-    tables.L, tables.M, tables.N, tables.P, tables.S, tables.Zs,
-};
-
-pub const print_ranges = [_]*const tables.RangeTable{
-    tables.L, tables.M, tables.N, tables.P, tables.S,
-};
-
-pub fn in(r: i32, ranges: []const *const tables.RangeTable) bool {
-    for (ranges) |inside| {
+pub fn in(r: i32, ranges: anytype) bool {
+    inline for (ranges) |inside| {
         if (is(inside, r)) {
             return true;
         }
@@ -272,7 +264,7 @@ pub fn isGraphic(r: i32) bool {
     if (r <= tables.max_latin1) {
         return tables.properties[@intCast(r)] & tables.pg != 0;
     }
-    return in(r, graphic_ranges[0..]);
+    return in(r, &.{ tables.L, tables.M, tables.N, tables.P, tables.S, tables.Zs });
 }
 
 // IsPrint reports whether the rune is defined as printable by Go. Such
@@ -284,7 +276,7 @@ pub fn isPrint(r: i32) bool {
     if (r <= tables.max_latin1) {
         return tables.properties[@intCast(r)] & tables.pp != 0;
     }
-    return in(r, print_ranges[0..]);
+    return in(r, &.{ tables.L, tables.M, tables.N, tables.P, tables.S });
 }
 
 pub fn isOneOf(ranges: []*tables.RangeTable, r: u32) bool {
